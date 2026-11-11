@@ -1,76 +1,93 @@
 # Java Registration Form
 
-This Java program is a simple registration form that allows users to enter their information, including name, gender, father's name, password, city, and email. The user data is then stored in a MySQL database, and a confirmation email is sent to the provided email address.
-
-## Table of Contents
-
-1. [Introduction](#introduction)
-2. [Features](#features)
-3. [Requirements](#requirements)
-4. [How to Use](#how-to-use)
-5. [Email Configuration](#email-configuration)
-6. [Contributing](#contributing)
-7. [License](#license)
-
-## Introduction
-
-The Java Registration Form is designed to capture user data and store it in a MySQL database. It also sends a confirmation email to the user's provided email address. The code uses Java Swing for the graphical user interface (GUI) and JDBC for database connectivity.
+A Java Swing desktop application that shows a student registration form, saves the submitted data to a MySQL database via JDBC, and sends a confirmation email via Gmail SMTP using JavaMail.
 
 ## Features
 
-- User-friendly registration form with fields for name, gender, father's name, password, city, and email.
-- Database storage: User data is stored in a MySQL database.
-- Password validation: The form checks whether the entered password matches the confirmation password.
-- Email confirmation: A confirmation email is sent to the user's provided email address.
-- Reset button: Users can clear the form fields using the reset button.
+- Form fields: name, gender (Male/Female drop-down), father's name, password, confirm password, city and email.
+- Password check: the record is only saved if the password and confirm-password fields match; otherwise a "Password did not match" dialog is shown.
+- Database storage: on **REGISTER**, a row is inserted into the `student` table using a `PreparedStatement`.
+- Confirmation email: after a successful insert, a "Registration Confirmation" email is sent to the address entered in the form.
+- **RESET** clears all fields.
+
+## Tech stack
+
+- Java with Swing (GUI) and JDBC
+- MySQL with [MySQL Connector/J](https://dev.mysql.com/downloads/connector/j/) (driver class `com.mysql.cj.jdbc.Driver`)
+- JavaMail (`javax.mail`) for sending email over `smtp.gmail.com:587` with STARTTLS
+
+## Repository contents
+
+| File | Description |
+| --- | --- |
+| `RegistrationForm.java` | The whole application (package `registrationform`, class `RegistrationForm1`) |
+| `.github/workflows/gradle-publish.yml` | GitHub Actions workflow that runs `gradle build` / `gradle publish` when a release is created |
+| `LICENSE` | Apache License 2.0 |
+
+Note: the repository has no `build.gradle`, so the Gradle workflow cannot build the project as-is (needs confirmation / a Gradle build file).
 
 ## Requirements
 
-To run the Java Registration Form, you will need the following:
+- JDK 8 or later
+- A running MySQL server
+- MySQL Connector/J JAR
+- JavaMail JAR (`javax.mail`). On JDK 11+ the JavaBeans Activation Framework JAR may also be required (needs confirmation for your JavaMail version).
 
-- Java Development Kit (JDK)
-- MySQL Database
-- Java IDE (e.g., Eclipse, IntelliJ IDEA)
-- MySQL Connector/J library for JDBC
+## Database setup
 
-Make sure to set up your MySQL database with a table named "student" to store user data. The table should have columns for name, gender, fatherName, password, city, and email.
+The code inserts into a table named `student` with these columns:
 
-## How to Use
+`name`, `gender`, `fatherName`, `password`, `city`, `email`
 
-1. Clone or download the source code to your local machine.
+Column types are not defined in the repository; an example schema:
 
-2. Open the code in your Java IDE.
+```sql
+CREATE TABLE student (
+  name       VARCHAR(100),
+  gender     VARCHAR(10),
+  fatherName VARCHAR(100),
+  password   VARCHAR(100),
+  city       VARCHAR(100),
+  email      VARCHAR(100)
+);
+```
 
-3. Make sure you have set up a MySQL database and configured it with the appropriate table and columns.
+Passwords are stored as plain text by the current code.
 
-4. Update the database connection details in the code:
-   - Replace `"jdbc:mysql://localhost:3306/your_database"` with your database URL.
-   - Replace `"username"` with your MySQL username.
-   - Replace `"password"` with your MySQL password.
+## Configuration
 
-5. Build and run the Java program.
+There are no environment variables or config files; values are hard-coded placeholders in `RegistrationForm.java` that you must edit:
 
-6. The registration form will appear, allowing users to enter their information.
+| Location | Placeholder | Replace with |
+| --- | --- | --- |
+| `actionPerformed` | `jdbc:mysql://localhost:3306/your_database` | Your JDBC URL / database name |
+| `actionPerformed` | `"username"`, `"password"` | Your MySQL user and password |
+| `sendEmail` | `senderEmail = "your_email"` | Gmail address used to send emails |
+| `sendEmail` | `senderPassword = "your_password"` | Password / app password for that account |
 
-7. Click the "REGISTER" button to store user data in the database and send a confirmation email.
+Do not commit real credentials. For anything beyond local testing, load them from environment variables or a config file instead.
 
-8. Use the "RESET" button to clear the form fields.
+## Build and run
 
-## Email Configuration
+The source declares `package registrationform;` and `public class RegistrationForm1`, while the file is named `RegistrationForm.java`. Java requires a public class to live in a file with the same name, so the file must be placed as `registrationform/RegistrationForm1.java` before compiling (or opened in an IDE, which will flag the same issue).
 
-To send confirmation emails, the code uses JavaMail with Gmail as the email service provider. To configure the email functionality, make sure to do the following:
+From the repository root, with the two JARs downloaded (replace the JAR names with the files you have):
 
-1. Replace `"your_email"` with your Gmail email address.
-2. Replace `"your_password"` with your Gmail password.
+```sh
+mkdir -p registrationform
+cp RegistrationForm.java registrationform/RegistrationForm1.java
 
-Please note that using your Gmail credentials in code is not recommended for production use. For production applications, consider using a more secure method for sending emails, such as environment variables.
+# Linux/macOS (use ';' instead of ':' as the classpath separator on Windows)
+javac -cp "mysql-connector-j.jar:javax.mail.jar" registrationform/RegistrationForm1.java
+java  -cp ".:mysql-connector-j.jar:javax.mail.jar" registrationform.RegistrationForm1
+```
+
+The registration window opens; fill in the form and click **REGISTER** to save the record and send the confirmation email, or **RESET** to clear it.
 
 ## Contributing
 
-Contributions to this project are welcome. If you have suggestions or improvements to the code, feel free to fork the repository, make your changes, and submit a pull request.
+Contributions are welcome: fork the repository, make your changes on a branch and open a pull request.
 
 ## License
 
-This Java Registration Form is distributed under an open-source license. Please refer to the project's specific license file or documentation for details on licensing terms and conditions.
-
-Enjoy using the Java Registration Form for capturing user information and sending confirmation emails!
+This project is licensed under the [Apache License 2.0](LICENSE).
